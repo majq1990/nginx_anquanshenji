@@ -17,6 +17,17 @@ deb http://mirrors.163.com/debian-security/ buster/updates main non-free contrib
        libtool cvs libncurses5-dev libglib2.0-dev gettext intltool subversion  git-core \
 ## just update the openssl to the 1.1.1K
     && apt -y remove openssl && cd /opt/openssl-1.1.1k && ./config && make -j 2 && make install \
+## fix the Incorrect OpenSSL dependency Library
+   && mv /usr/lib/aarch64-linux-gnu/libssl.so.1.1 /usr/lib/aarch64-linux-gnu/libssl.so.1.1.bak \
+   && mv /usr/lib/aarch64-linux-gnu/libcrypto.so.1.1 /usr/lib/aarch64-linux-gnu/libcrypto.so.1.1.bak \
+   && ln -s /usr/local/lib/libssl.so.1.1 /usr/lib/aarch64-linux-gnu/libssl.so.1.1 \
+   && ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/aarch64-linux-gnu/libcrypto.so.1.1\
+##  Generating OpenSSL self signed certificate and dhparam
+   && mkdir /opt/cert/ && cd /opt/cert/ && openssl genrsa -out server.key 2048 \
+   && openssl req -new -subj "/C=CN/ST=SiChuan/L=ChengDu/O=egova/OU=egova.com/CN=domain" -key server.key -out server.csr \
+   && mv server.key server.origin.key && openssl rsa -in server.origin.key -out server.key \
+   && openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt \
+   && openssl dhparam -out server-dhparam.pem 4096 \
 ## just update the nginx ,remove the other modle ,Ensure only required modules are installed 
     && cd /opt/nginx-1.21.0 \
     && ./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --modules-path=/usr/lib64/nginx/modules \
